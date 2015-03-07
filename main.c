@@ -4,22 +4,15 @@
 
 char** justDoIt(char **arr, size_t i){
     char *tmp_arr = NULL;
+    char *check = NULL;
     tmp_arr = (char*)calloc(1, sizeof(char));
+
+    if (!tmp_arr){
+        return 0;
+    }
 
     for (size_t x = 0; x < i; ++x) {
         size_t y = 0;
-        size_t length = 0;
-
-        while (arr[x][y] != '\0'){
-            length++;
-            y++;
-        }
-        length = length + 1; // add '\0' symbol
-
-        if (!tmp_arr){
-            printf("[error]");
-            exit(-1);
-        }
 
         size_t tmp_length = 0;
 
@@ -28,11 +21,12 @@ char** justDoIt(char **arr, size_t i){
             if(!(arr[x][y] == ' ' && arr[x][y + 1] == ' ')){
                 tmp_length++;
 
-                tmp_arr = (char*)realloc(tmp_arr, sizeof(char) * tmp_length);
-                if(!tmp_arr){
-                    printf("[error]");
-                    exit(-1);
+                check = NULL;
+                check = (char*)realloc(tmp_arr, sizeof(char) * tmp_length);
+                if(!check){
+                    return 0;
                 }
+                tmp_arr = check;
 
                 tmp_arr[tmp_length - 1] = arr[x][y];
             }
@@ -40,27 +34,31 @@ char** justDoIt(char **arr, size_t i){
         }
 
         tmp_length++;
-        tmp_arr = (char*)realloc(tmp_arr, sizeof(char) * tmp_length);
-        if(!tmp_arr){
-            printf("[error]");
-            exit(-1);
+
+        check = NULL;
+        check = (char*)realloc(tmp_arr, sizeof(char) * tmp_length);
+        if(!check){
+            return 0;
         }
+        tmp_arr = check;
 
         tmp_arr[tmp_length - 1] = '\0';
 
-        arr[x] = (char*)realloc(arr[x], sizeof(char) * tmp_length);
-        if(!arr[x]){
-            printf("[error]");
-            exit(-1);
+        check = NULL;
+        check = (char*)realloc(arr[x], sizeof(char) * tmp_length);
+        if(!check){
+            return 0;
         }
+        arr[x] = check;
 
         memcpy(arr[x], tmp_arr, tmp_length);
 
-        tmp_arr = (char*)realloc(tmp_arr, sizeof(char));
-        if(!tmp_arr){
-            printf("[error]");
-            exit(-1);
+        check = NULL;
+        check = (char*)realloc(tmp_arr, sizeof(char));
+        if(!check){
+            return 0;
         }
+        tmp_arr = check;
     }
     free(tmp_arr);
     return arr;
@@ -80,24 +78,36 @@ int main(void)
 
     temp = (char*)malloc(sizeof(char) * count);
     if (!temp){
+        //free
+        free(arr);
         printf("[error]");
         exit(-1);
     }
 
     while(1){
         char c = 0;
-        int tmp_scanf = 0;
-        tmp_scanf = scanf("%c", &c);
-        if(!tmp_scanf){
+        int is_eof = 0;
+        switch (scanf("%c", &c)) {
+        case EOF: is_eof = 1; break;
+        case 1 : break;
+        default:
+            free(arr);
+            free(temp);
             printf("[error]");
             exit(-1);
         }
 
-        if(feof(stdin)) {
+        if(is_eof) {
             temp[count - 1] = '\0';
 
             arr[i - 1] = (char*)calloc(count, sizeof(char));
             if(!(arr[i - 1])){
+                //free
+                for (size_t x = 0; x < i; ++x){
+                    free(arr[x]);
+                }
+                free(arr);
+                free(temp);
                 printf("[error]");
                 exit(-1);
             }
@@ -111,6 +121,12 @@ int main(void)
 
             arr[i - 1] = (char*)calloc(count, sizeof(char));
             if(!(arr[i - 1])){
+                //free
+                for (size_t x = 0; x < i; ++x){
+                    free(arr[x]);
+                }
+                free(arr);
+                free(temp);
                 printf("[error]");
                 exit(-1);
             }
@@ -119,32 +135,55 @@ int main(void)
             i++;
             count = 1;
 
-            arr = (char**)realloc(arr, sizeof(char*) * i);
-            if(!arr){
+            char **check = NULL;
+            check = (char**)realloc(arr, sizeof(char*) * i);
+
+            if(!check){
+                //free
+                for (size_t x = 0; x < i; ++x){
+                    free(arr[x]);
+                }
+                free(arr);
+                free(temp);
                 printf("[error]");
                 exit(-1);
             }
+            arr = check;
 
             arr[i - 1] = NULL;
         } else {
             temp[count - 1] = c;
             count++;
-            temp = (char*)realloc(temp, sizeof(char) * count);
-            if (!temp){
+
+            char *check = NULL;
+            check = (char*)realloc(temp, sizeof(char) * count);
+            if (!check){
+                //free
+                for (size_t x = 0; x < i; ++x){
+                    free(arr[x]);
+                }
+                free(arr);
+                free(temp);
                 printf("[error]");
                 exit(-1);
             }
+            temp = check;
         }
     }
 
-    for (size_t x = 0; x < i; ++x) {
-        if(!arr[x]) {
+    char **check = NULL;
+    check = justDoIt(arr, i);
+    if(check == 0){
+        //free
+        for (size_t x = 0; x < i; ++x){
             free(arr[x]);
-            i--;
         }
+        free(arr);
+        free(temp);
+        printf("[error]");
+        exit(-1);
     }
-
-    arr = justDoIt(arr, i);
+    arr = check;
 
     for (size_t x = 0; x < i; ++x) {
         printf("%s\n", arr[x]);
